@@ -9,10 +9,10 @@
   },
   "runtimes": [
     {
-      "name": "classifier",
+      "name": "ticket_workflow",
       "build": "CodeZip",
       "entrypoint": "main.py",
-      "codeLocation": "app/classifier/",
+      "codeLocation": "app/ticket_workflow/",
       "runtimeVersion": "PYTHON_3_14",
       "networkMode": "PUBLIC",
       "protocol": "HTTP"
