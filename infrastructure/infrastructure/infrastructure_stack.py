@@ -1,15 +1,19 @@
 from constructs import Construct
-
 from aws_cdk import (
     CfnOutput,
+    CfnParameter,
     Duration,
+    Fn,
     RemovalPolicy,
     Stack,
     aws_dynamodb as dynamodb,
+    aws_iam as iam,
+    aws_lambda as lambda_,
+    aws_lambda_event_sources as lambda_event_sources,
     aws_s3 as s3,
     aws_sqs as sqs,
 )
-
+from pathlib import Path
 
 class InfrastructureStack(Stack):
 
@@ -20,6 +24,33 @@ class InfrastructureStack(Stack):
         **kwargs,
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
+
+        agent_runtime_arn = CfnParameter(
+            self,
+            "AgentRuntimeArn",
+            type="String",
+            description=(
+                "Base ARN of the deployed ticket_workflow AgentCore runtime "
+                "(without /runtime-endpoint/...)"
+            ),
+            allowed_pattern=(
+                r"^arn:[^:]+:bedrock-agentcore:[a-z0-9-]+:[0-9]{12}:"
+                r"runtime/[^/]+$"
+            ),
+            constraint_description=(
+                "Must be a base AgentCore runtime ARN without an endpoint suffix"
+            ),
+        )
+        agent_runtime_arn_value = agent_runtime_arn.value_as_string
+        default_runtime_endpoint_arn = Fn.join(
+            "",
+            [agent_runtime_arn_value, "/runtime-endpoint/DEFAULT"],
+        )
+        lambda_code_path = (
+            Path(__file__).parent
+            / "lambda_functions"
+            / "ticket_processor"
+        )
 
         # Stores raw tickets, knowledge documents, results and evaluation data.
         ticket_bucket = s3.Bucket(
@@ -76,6 +107,53 @@ class InfrastructureStack(Stack):
                 )
             ),
             removal_policy=RemovalPolicy.RETAIN,
+        )
+
+        processor_lambda = lambda_.Function(
+            self,
+            "TicketProcessorFunction",
+            function_name="agentic-ticket-processor-prod",
+            runtime=lambda_.Runtime.PYTHON_3_12,
+            handler="handler.lambda_handler",
+            code=lambda_.Code.from_asset(
+                path=str(lambda_code_path),
+            ),
+            memory_size=512,
+            timeout=Duration.minutes(2),
+            environment={
+                "AGENT_RUNTIME_ARN": agent_runtime_arn_value,
+                "TICKET_TABLE_NAME": ticket_table.table_name,
+            },
+        )
+
+        processor_lambda.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=[
+                    "dynamodb:PutItem",
+                ],
+                resources=[
+                    ticket_table.table_arn,
+                ],
+            )
+        )
+
+        processor_lambda.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=[
+                    "bedrock-agentcore:InvokeAgentRuntime",
+                ],
+                resources=[
+                    agent_runtime_arn_value,
+                    default_runtime_endpoint_arn,
+                ],
+            )
+        )
+        processor_lambda.add_event_source(
+            lambda_event_sources.SqsEventSource(
+                ticket_queue,
+                batch_size=1,
+                report_batch_item_failures=True,
+            )
         )
 
         CfnOutput(
