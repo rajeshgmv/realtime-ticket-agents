@@ -1,1 +1,8 @@
-[]
+[
+  {
+    "name": "production",
+    "description": "Production deployment in us-east-1",
+    "account": "862330372470",
+    "region": "us-east-1"
+  }
+]

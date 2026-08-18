@@ -13,7 +13,7 @@
       "build": "CodeZip",
       "entrypoint": "main.py",
       "codeLocation": "app/ticket_workflow/",
-      "runtimeVersion": "PYTHON_3_14",
+      "runtimeVersion": "PYTHON_3_13",
       "networkMode": "PUBLIC",
       "protocol": "HTTP"
     }

@@ -1,3 +1,17 @@
 {
-  "targets": {}
+  "targets": {
+    "production": {
+      "resources": {
+        "runtimes": {
+          "ticket_workflow": {
+            "runtimeId": "ticketSupportAgents_ticket_workflow-Mtl1SNFnfL",
+            "runtimeArn": "arn:aws:bedrock-agentcore:us-east-1:862330372470:runtime/ticketSupportAgents_ticket_workflow-Mtl1SNFnfL",
+            "roleArn": "arn:aws:iam::862330372470:role/AgentCore-ticketSupportAg-ApplicationAgentTicketWor-8h1REpYXTAAc"
+          }
+        },
+        "stackName": "AgentCore-ticketSupportAgents-production",
+        "deployHash": "dcc3951fc73b4098"
+      }
+    }
+  }
 }

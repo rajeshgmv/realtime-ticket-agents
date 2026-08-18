@@ -1,3 +1,8 @@
+[project]
+name = "ticket_workflow"
+version = "0.1.0"
+requires-python = ">=3.13,<3.14"
+
 dependencies = [
     "aws-opentelemetry-distro",
     "opentelemetry-instrumentation-langchain >= 0.59.0",

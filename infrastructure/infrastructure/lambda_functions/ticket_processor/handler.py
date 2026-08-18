@@ -52,11 +52,12 @@ def lambda_handler(event, context):
             ticket_table.put_item(
                 Item={
                     "ticket_id": ticket["ticket_id"],
-                    "status": "classified",
+                    "status": "Queued",
                     "type": result["type"],
                     "queue": result["queue"],
                     "priority": result["priority"],
                     "reason": result["reason"],
+                    "routing":result["routing"],
                     "prompt_version": result["prompt_version"],
                     "created_at": timestamp,
                     "updated_at": timestamp,
