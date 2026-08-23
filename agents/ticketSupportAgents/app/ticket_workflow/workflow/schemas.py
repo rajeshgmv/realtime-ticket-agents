@@ -33,8 +33,13 @@ class RoutingDecision(BaseModel):
     destination: str
     used_default_route: bool
 
+class RAGResponse(BaseModel):
+    response: str
+    partial_answer: Literal["yes", "no"]
+    human_routing_ind: Literal["yes", "no"]
 
 class TicketState(TypedDict, total=False):
     ticket: TicketInput
     classification: TicketClassification
     routing: RoutingDecision
+    rag_response: RAGResponse

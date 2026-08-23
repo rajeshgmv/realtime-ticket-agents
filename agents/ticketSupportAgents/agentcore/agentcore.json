@@ -15,7 +15,10 @@
       "codeLocation": "app/ticket_workflow/",
       "runtimeVersion": "PYTHON_3_13",
       "networkMode": "PUBLIC",
-      "protocol": "HTTP"
+      "protocol": "HTTP",
+      "additionalPolicies": [
+        "aoss-read-policy.json"
+      ]
     }
   ],
   "memories": [],

@@ -58,7 +58,8 @@ def lambda_handler(event, context):
                     "priority": result["priority"],
                     "reason": result["reason"],
                     "routing":result["routing"],
-                    "prompt_version": result["prompt_version"],
+                    "rag_response": result["rag_response"],
+                    "prompt_versions": result["prompt_versions"],
                     "created_at": timestamp,
                     "updated_at": timestamp,
                 }
