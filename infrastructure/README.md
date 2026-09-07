@@ -1,58 +1,70 @@
 
-# Welcome to your CDK Python project!
+# Ticket Processing Infrastructure
 
-This is a blank project for CDK development with Python.
+This AWS CDK project provisions the event-driven resources that receive tickets and invoke the deployed Amazon Bedrock AgentCore ticket workflow.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+## Resources
 
-This project is set up like a standard Python project.  The initialization
-process also creates a virtualenv within this project, stored under the `.venv`
-directory.  To create the virtualenv it assumes that there is a `python3`
-(or `python` for Windows) executable in your path with access to the `venv`
-package. If for any reason the automatic creation of the virtualenv fails,
-you can create the virtualenv manually.
+The `AgenticTicketSupportProd` stack creates:
 
-To manually create a virtualenv on MacOS and Linux:
+- An encrypted, versioned S3 bucket for ticket and knowledge-base data
+- An encrypted SQS queue for incoming tickets
+- An encrypted dead-letter queue for messages that fail three processing attempts
+- An on-demand DynamoDB table for ticket-processing status
+- A Python 3.12 Lambda function that consumes one ticket at a time and invokes the AgentCore runtime
+- IAM permissions for the Lambda function to invoke the runtime and write ticket results
 
-```
-$ python3 -m venv .venv
-```
+The queues, table, and bucket use retain removal policies. Deleting the CloudFormation stack does not automatically delete those retained resources.
 
-After the init process completes and the virtualenv is created, you can use the following
-step to activate your virtualenv.
+## Setup
 
-```
-$ source .venv/bin/activate
-```
+From this folder, create and activate a virtual environment:
 
-If you are a Windows platform, you would activate the virtualenv like this:
-
-```
-% .venv\Scripts\activate.bat
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
 ```
 
-Once the virtualenv is activated, you can install the required dependencies.
+Configure AWS credentials, bootstrap the target account if needed, and synthesize the template:
 
-```
-$ pip install -r requirements.txt
-```
-
-At this point you can now synthesize the CloudFormation template for this code.
-
-```
-$ cdk synth
+```bash
+cdk bootstrap
+cdk synth --parameters AgentRuntimeArn=<agentcore-runtime-arn>
 ```
 
-To add additional dependencies, for example other CDK libraries, just add
-them to your `requirements.txt` file and rerun the `python -m pip install -r requirements.txt`
-command.
+`AgentRuntimeArn` must be the base deployed AgentCore runtime ARN, without the `/runtime-endpoint/DEFAULT` suffix.
+
+## Deploy
+
+Review the generated changes before deployment:
+
+```bash
+cdk diff --parameters AgentRuntimeArn=<agentcore-runtime-arn>
+```
+
+Deploy the stack:
+
+```bash
+cdk deploy --parameters AgentRuntimeArn=<agentcore-runtime-arn>
+```
+
+The stack targets `us-east-1` and uses the AWS account selected by the active CDK credentials.
+
+## Test
+
+Install development requirements and run the unit tests:
+
+```bash
+python -m pip install -r requirements-dev.txt
+pytest
+```
 
 ## Useful commands
 
- * `cdk ls`          list all stacks in the app
- * `cdk synth`       emits the synthesized CloudFormation template
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk docs`        open CDK documentation
-
-Enjoy!
+| Command | Description |
+| --- | --- |
+| `cdk ls` | List stacks in the application. |
+| `cdk synth` | Generate the CloudFormation template. |
+| `cdk diff` | Compare the local stack with the deployed stack. |
+| `cdk deploy` | Deploy the stack to AWS. |
